@@ -1,0 +1,195 @@
+diff -urN cdrkit-1.1.9/include/schily.h cdrkit-1.1.9_getline/include/schily.h
+--- cdrkit-1.1.9/include/schily.h	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/include/schily.h	2009-06-08 13:46:40.000000000 +0200
+@@ -116,13 +116,13 @@
+ extern	int	fexecle(const char *, FILE *, FILE *, FILE *, const char *, ...);
+ 		/* 6th arg not const, fexecv forces av[ac] = NULL */
+ extern	int	fexecv(const char *, FILE *, FILE *, FILE *, int, char **);
+-extern	int	fexecve(const char *, FILE *, FILE *, FILE *, char * const *, 
++extern	int	cdr_fexecve(const char *, FILE *, FILE *, FILE *, char * const *, 
+ 							  char * const *);
+ extern	int	fspawnv(FILE *, FILE *, FILE *, int, char * const *);
+ extern	int	fspawnl(FILE *, FILE *, FILE *, const char *, const char *, ...);
+ extern	int	fspawnv_nowait(FILE *, FILE *, FILE *, const char *, int, 
+ 										char *const*);
+-extern	int	fgetline(FILE *, char *, int);
++extern	int	cdr_fgetline(FILE *, char *, int);
+ extern	int	fgetstr(FILE *, char *, int);
+ extern	void	file_raise(FILE *, int);
+ extern	int	fileclose(FILE *);
+@@ -190,7 +190,7 @@
+ extern	char	*fillbytes(void *, int, char);
+ extern	char	*findbytes(const void *, int, char);
+ extern	int	findline(const char *, char, const char *, int, char **, int);
+-extern	int	getline(char *, int);
++extern	int	cdr_getline(char *, int);
+ extern	int	getstr(char *, int);
+ extern	int	breakline(char *, char, char **, int);
+ extern	int	getallargs(int *, char * const**, const char *, ...);
+diff -urN cdrkit-1.1.9/librols/fexec.c cdrkit-1.1.9_getline/librols/fexec.c
+--- cdrkit-1.1.9/librols/fexec.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/librols/fexec.c	2009-06-08 13:46:33.000000000 +0200
+@@ -170,7 +170,7 @@
+ 	} while (p != NULL);
+ 	va_end(args);
+ 
+-	ret = fexecve(name, in, out, err, av, env);
++	ret = cdr_fexecve(name, in, out, err, av, env);
+ 	if (av != xav)
+ 		free(av);
+ 	return (ret);
+@@ -184,11 +184,11 @@
+ 	char *av[];
+ {
+ 	av[ac] = NULL;			/*  force list to be null terminated */
+-	return (fexecve(name, in, out, err, av, environ));
++	return (cdr_fexecve(name, in, out, err, av, environ));
+ }
+ 
+ EXPORT int
+-fexecve(name, in, out, err, av, env)
++cdr_fexecve(name, in, out, err, av, env)
+ 	const char *name;
+ 	FILE *in, *out, *err;
+ 	char * const av[], * const env[];
+diff -urN cdrkit-1.1.9/librols/getdomainname.c cdrkit-1.1.9_getline/librols/getdomainname.c
+--- cdrkit-1.1.9/librols/getdomainname.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/librols/getdomainname.c	2009-06-08 13:32:40.000000000 +0200
+@@ -83,7 +83,7 @@
+ 	if (f == NULL)
+ 		return (-1);
+ 
+-	while (fgetline(f, name1, sizeof (name1)) >= 0) {
++	while (cdr_fgetline(f, name1, sizeof (name1)) >= 0) {
+ 		if ((p = strchr(name1, '#')) != NULL)
+ 			*p = '\0';
+ 
+diff -urN cdrkit-1.1.9/librols/stdio/fgetline.c cdrkit-1.1.9_getline/librols/stdio/fgetline.c
+--- cdrkit-1.1.9/librols/stdio/fgetline.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/librols/stdio/fgetline.c	2009-06-08 13:32:19.000000000 +0200
+@@ -37,7 +37,7 @@
+  */
+ 
+ EXPORT int
+-fgetline(f, buf, len)
++cdr_fgetline(f, buf, len)
+ 	register	FILE	*f;
+ 			char	*buf;
+ 	register	int	len;
+@@ -76,9 +76,9 @@
+ }
+ 
+ EXPORT int
+-getline(buf, len)
++cdr_getline(buf, len)
+ 	char	*buf;
+ 	int	len;
+ {
+-	return (fgetline(stdin, buf, len));
++	return (cdr_fgetline(stdin, buf, len));
+ }
+diff -urN cdrkit-1.1.9/libusal/scsitransp.c cdrkit-1.1.9_getline/libusal/scsitransp.c
+--- cdrkit-1.1.9/libusal/scsitransp.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/libusal/scsitransp.c	2009-06-08 13:32:01.000000000 +0200
+@@ -301,7 +301,7 @@
+ 
+ 	printf("%s", msg);
+ 	flush();
+-	if (getline(okbuf, sizeof (okbuf)) == EOF)
++	if (cdr_getline(okbuf, sizeof (okbuf)) == EOF)
+ 		exit(EX_BAD);
+ 	if (streql(okbuf, "y") || streql(okbuf, "yes") ||
+ 	    streql(okbuf, "Y") || streql(okbuf, "YES"))
+diff -urN cdrkit-1.1.9/readom/io.c cdrkit-1.1.9_getline/readom/io.c
+--- cdrkit-1.1.9/readom/io.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/readom/io.c	2009-06-08 13:31:39.000000000 +0200
+@@ -130,7 +130,7 @@
+ 		(*prt)(s, *lp, mini, maxi, dp);
+ 		flush();
+ 		line[0] = '\0';
+-		if (getline(line, 80) == EOF)
++		if (cdr_getline(line, 80) == EOF)
+ 			exit(EX_BAD);
+ 
+ 		linep = skipwhite(line);
+@@ -178,7 +178,7 @@
+ 	vprintf(form, args);
+ 	va_end(args);
+ 	flush();
+-	if (getline(okbuf, sizeof(okbuf)) == EOF)
++	if (cdr_getline(okbuf, sizeof(okbuf)) == EOF)
+ 		exit(EX_BAD);
+ 	if (okbuf[0] == '?') {
+ 		printf("Enter 'y', 'Y', 'yes' or 'YES' if you agree with the previous asked question.\n");
+diff -urN cdrkit-1.1.9/readom/readom.c cdrkit-1.1.9_getline/readom/readom.c
+--- cdrkit-1.1.9/readom/readom.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/readom/readom.c	2009-06-08 13:31:54.000000000 +0200
+@@ -1605,7 +1605,7 @@
+ 		fprintf(stderr, "Copy from SCSI (%d,%d,%d) disk to file\n",
+ 					usal_scsibus(usalp), usal_target(usalp), usal_lun(usalp));
+ 		fprintf(stderr, "Enter filename [%s]: ", defname); flush();
+-		(void) getline(filename, sizeof (filename));
++		(void) cdr_getline(filename, sizeof (filename));
+ 	}
+ 
+ 	if (askrange) {
+@@ -1772,7 +1772,7 @@
+ 		fprintf(stderr, "Copy from file to SCSI (%d,%d,%d) disk\n",
+ 					usal_scsibus(usalp), usal_target(usalp), usal_lun(usalp));
+ 		fprintf(stderr, "Enter filename [%s]: ", defname); flush();
+-		(void) getline(filename, sizeof (filename));
++		(void) cdr_getline(filename, sizeof (filename));
+ 		fprintf(stderr, "Notice: reading from file always starts at file offset 0.\n");
+ 
+ 		getlong("Enter starting sector for copy:", &addr, 0L, end-1);
+diff -urN cdrkit-1.1.9/wodim/cue.c cdrkit-1.1.9_getline/wodim/cue.c
+--- cdrkit-1.1.9/wodim/cue.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/wodim/cue.c	2009-06-08 13:58:59.000000000 +0200
+@@ -253,7 +253,7 @@
+ static	char	*peekword(void);
+ static	char	*lineend(void);
+ static	char	*markword(char *delim);
+-static	char	getdelim(void);
++static	char	cdr_getdelim(void);
+ static	char	*getnextitem(char *delim);
+ static	char	*neednextitem(char *delim);
+ static	char	*nextword(void);
+@@ -746,7 +746,7 @@
+ 	if (kp == NULL)
+ 		cueabort("Unknown filetype '%s'", word);
+ 
+-	if (getdelim() == '/') {
++	if (cdr_getdelim() == '/') {
+ 		word = needitem();
+ 		if (*astol(++word, &secsize) != '\0')
+ 			cueabort("Not a number '%s'", word);
+@@ -1038,7 +1038,7 @@
+ 
+ 	do {
+ 		fillbytes(linebuf, sizeof (linebuf), '\0');
+-		len = fgetline(f, linebuf, sizeof (linebuf));
++		len = cdr_fgetline(f, linebuf, sizeof (linebuf));
+ 		if (len < 0)
+ 			return (NULL);
+ 		if (len > 0 && linebuf[len-1] == '\r') {
+@@ -1128,7 +1128,7 @@
+ }
+ 
+ static char 
+-getdelim()
++cdr_getdelim()
+ {
+ 	return (wordendc);
+ }
+diff -urN cdrkit-1.1.9/wodim/wodim.c cdrkit-1.1.9_getline/wodim/wodim.c
+--- cdrkit-1.1.9/wodim/wodim.c	2009-06-08 13:22:27.000000000 +0200
++++ cdrkit-1.1.9_getline/wodim/wodim.c	2009-06-08 13:33:01.000000000 +0200
+@@ -3964,7 +3964,7 @@
+ #endif
+ 		} else
+ #endif
+-		if (fgetline(tty, ans, 1) < 0)
++		if (cdr_fgetline(tty, ans, 1) < 0)
+ 			comerrno(EX_BAD, "Aborted by EOF on input.\n");
+ 	}
+ 	usalp->silent--;

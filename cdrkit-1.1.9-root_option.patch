@@ -1,0 +1,14 @@
+--- cdrkit-1.1.9/genisoimage/genisoimage.c	2009-08-11 13:45:42.491887853 +0200
++++ cdrkit-1.1.9-master/genisoimage/genisoimage.c	2009-08-11 15:10:23.382014864 +0200
+@@ -3117,8 +3117,10 @@ if (check_session == 0)
+ 			if (reloc_root != NULL) {
+ 				strcpy(graft_point, reloc_root);
+ 				len = strlen(graft_point);
+-				if (graft_point[len] != '/')
++				if (graft_point[len] != '/'){
+ 					graft_point[len++] = '/';
++                    graft_point[len] = '\0';
++                }
+ 			} else {
+ 				len = 0;
+ 			}
